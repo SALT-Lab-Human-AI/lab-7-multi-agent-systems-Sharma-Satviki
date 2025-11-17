@@ -30,8 +30,16 @@ class Config:
     """
 
     # Load environment variables from root .env file
-    _env_path = Path(__file__).parent / ".env"
-    load_dotenv(_env_path)
+    # Load environment variables from the REAL project root
+    PROJECT_ROOT = Path(__file__).resolve().parent
+    ROOT_ENV = PROJECT_ROOT / ".env"
+
+    # If this isn't the project root, go one directory up
+    if not ROOT_ENV.exists():
+        ROOT_ENV = PROJECT_ROOT.parent / ".env"
+
+    load_dotenv(ROOT_ENV, override=True)
+
 
     # ====================
     # API Provider Settings (supports OpenAI and Groq)
@@ -51,7 +59,7 @@ class Config:
     else:
         API_BASE = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         API_KEY = OPENAI_API_KEY
-        DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview")
+        DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     
     # For backward compatibility
     OPENAI_API_BASE = API_BASE

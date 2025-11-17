@@ -101,7 +101,7 @@ class AgentConfig:
 
     RESEARCH_AGENT = {
         "name": "ResearchAgent",
-        "role": "Market Researcher",
+        "role": "Interview Platform Researcher",
         "temperature": 0.7,
     }
 
@@ -122,6 +122,13 @@ class AgentConfig:
         "role": "Product Reviewer",
         "temperature": 0.7,
     }
+
+    QUALITY_AGENT = {
+    "name": "QualityAgent",
+    "role": "Quality Assurance Specialist",
+    "temperature": 0.6,
+}
+
 
     @classmethod
     def get_agent_config(cls, agent_type: str) -> Dict[str, Any]:
