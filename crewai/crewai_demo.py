@@ -145,15 +145,21 @@ def search_travel_costs(destination: str) -> str:
 def create_flight_agent(destination: str, trip_dates: str):
     """Create the Flight Specialist agent with real research tools."""
     return Agent(
-        role="Flight Specialist",
+        role="Accommodation Specialist",
         goal=f"Research and recommend the best flight options for the {destination} trip "
              f"({trip_dates}), considering dates, airlines, prices, and flight durations. "
              f"Use real data from flight booking sites to provide accurate, current pricing.",
-        backstory="You are an experienced flight specialist with deep knowledge of "
-                  "airline schedules, pricing patterns, and travel routes. You excel at "
-                  "finding the best flight options that balance cost and convenience. "
-                  "You have booked thousands of flights and know the best times to fly. "
-                  "You always research current prices and use real booking site data.",
+        backstory=(
+        "You are a Hotel & Stay Curator with deep experience in matching travelers to the right "
+        "accommodations across the world. You obsess over guest reviews, neighborhood vibes, and "
+        "the small details that make a stay feel special. You are fluent in reading between the "
+        "lines of online ratings, spotting red flags, and identifying truly great value at every "
+        "budget level. You think like a traveler: you balance location, comfort, safety, and "
+        "access to key attractions. You always use up-to-date hotel information, realistic prices, "
+        "and verified amenities to make recommendations that feel personalized, practical, and "
+        "trustworthy."
+    )
+    ,
         tools=[search_flight_prices],
         verbose=True,
         allow_delegation=False
@@ -220,6 +226,24 @@ def create_budget_agent(destination: str):
         verbose=True,
         allow_delegation=False
     )
+
+def create_quality_agent():
+    """Create the Quality Assurance Agent to refine the final report."""
+    return Agent(
+        role="Quality Analyst",
+        goal=(
+            "Review, refine, and improve the final travel plan by ensuring clarity, "
+            "coherence, and professional formatting. Provide a polished final summary."
+        ),
+        backstory=(
+            "You are a detail-oriented quality reviewer with experience editing "
+            "travel plans and formal documents. You eliminate inconsistency, fix tone, "
+            "ensure readability, and produce clean, structured summaries."
+        ),
+        verbose=True,
+        allow_delegation=False
+    )
+
 
 
 # ============================================================================
@@ -303,6 +327,21 @@ def create_budget_task(budget_agent, destination: str, trip_duration: str):
                        f"evidence-based cost-saving recommendations for a {trip_duration} trip to {destination}"
     )
 
+def create_quality_task(quality_agent):
+    """Define a final refinement task for overall quality improvement."""
+    return Task(
+        description=(
+            "Review the outputs from the flight, hotel, itinerary, and budget tasks. "
+            "Refine them for clarity, consistency, structure, and tone. "
+            "Rewrite the plan into a polished, professional, traveler-friendly final report."
+        ),
+        agent=quality_agent,
+        expected_output=(
+            "A refined final travel plan summary that is coherent, cleanly formatted, "
+            "and easy to follow. It should integrate all components into one professional document."
+        )
+    )
+
 
 # ============================================================================
 # CREW ORCHESTRATION
@@ -373,6 +412,10 @@ def main(destination: str = "Iceland", trip_duration: str = "5 days",
     print("[4/4] Creating Financial Advisor Agent (analyzes real costs)...")
     budget_agent = create_budget_agent(destination)
 
+    print("[5/5] Creating Quality Analyst Agent...")
+    quality_agent = create_quality_agent()
+
+
     print("\n✅ All agents created successfully!")
     print()
 
@@ -382,6 +425,8 @@ def main(destination: str = "Iceland", trip_duration: str = "5 days",
     hotel_task = create_hotel_task(hotel_agent, destination, trip_dates)
     itinerary_task = create_itinerary_task(itinerary_agent, destination, trip_duration, trip_dates)
     budget_task = create_budget_task(budget_agent, destination, trip_duration)
+    quality_task = create_quality_task(quality_agent)
+
 
     print("Tasks created successfully!")
     print()
@@ -392,8 +437,8 @@ def main(destination: str = "Iceland", trip_duration: str = "5 days",
     print()
 
     crew = Crew(
-        agents=[flight_agent, hotel_agent, itinerary_agent, budget_agent],
-        tasks=[flight_task, hotel_task, itinerary_task, budget_task],
+        agents=[flight_agent, hotel_agent, itinerary_agent, budget_agent,quality_agent],
+        tasks=[flight_task, hotel_task, itinerary_task, budget_task, quality_task],
         verbose=True,
         process="sequential"  # Sequential task execution
     )

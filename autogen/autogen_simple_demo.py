@@ -51,6 +51,9 @@ class SimpleInterviewPlatformWorkflow:
         # Phase 4: Review
         self.phase_review()
 
+        self.phase_quality()
+
+
         # Summary
         self.print_summary()
 
@@ -173,6 +176,42 @@ Provide strategic review and recommendations."""
         print("\n[ReviewerAgent Output]")
         print(self.outputs["review"])
 
+    def phase_quality(self):
+        """Phase 5: Quality Check"""
+        print("\n" + "="*80)
+        print("PHASE 5: QUALITY CHECK")
+        print("="*80)
+        print("[QualityAgent is reviewing for clarity and consistency...]")
+
+        system_prompt = """You are a Quality Assurance Specialist. 
+        Review the final strategic recommendations and ensure:
+        - Clarity
+        - Logical flow
+        - Completeness
+        - No contradictions
+        Rewrite the recommendations in improved, clean language.
+        Keep it within 150 words."""
+
+        user_message = f"""Here are the strategic recommendations:
+    {self.outputs['review']}
+    Please refine and enhance them."""
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            temperature=Config.AGENT_TEMPERATURE,
+            max_tokens=Config.AGENT_MAX_TOKENS,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ]
+        )
+
+        self.outputs["quality"] = response.choices[0].message.content
+        print("\n[QualityAgent Output]")
+        print(self.outputs["quality"])
+
+
+
     def print_summary(self):
         """Print final summary"""
         print("\n" + "="*80)
@@ -214,6 +253,12 @@ demonstrating the sequential workflow pattern of AutoGen.
         print("PHASE 4: STRATEGIC REVIEW (Full Output)")
         print("-"*80)
         print(self.outputs["review"])
+
+        print("\n" + "-"*80)
+        print("PHASE 5: QUALITY CHECK (Full Output)")
+        print("-"*80)
+        print(self.outputs["quality"])
+
 
         # Save to file
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -266,3 +311,4 @@ if __name__ == "__main__":
         print("5. Check OpenAI API status at https://status.openai.com")
         import traceback
         traceback.print_exc()
+

@@ -174,6 +174,32 @@ class InterviewPlatformAgents:
 
         self.agents["reviewer"] = agent
         return agent
+    def create_quality_agent(self) -> autogen.ConversableAgent:
+        """
+        QualityAgent: Quality Assurance Reviewer
+        Role: Improve clarity, structure, and correctness of the final product plan
+        """
+        system_message = """You are a Quality Assurance Specialist.
+        Your job is to:
+
+        1. Review the final product recommendations
+        2. Improve clarity, flow, and organization
+        3. Fix inconsistencies
+        4. Rewrite content in cleaner, more concise business language
+        5. Ensure the final document is polished and executive-ready
+
+        Respond with the improved, refined version ONLY."""
+
+        agent = autogen.ConversableAgent(
+            name="QualityAgent",
+            system_message=system_message,
+            llm_config={"config_list": self.config_list, "temperature": 0.5},
+            human_input_mode="NEVER",
+        )
+
+        self.agents["quality"] = agent
+        return agent
+
 
 
 # ============================================================================
@@ -295,6 +321,30 @@ class InterviewPlatformWorkflow:
         self.outputs["review"] = review_output
 
         return review_output
+    def conduct_quality_phase(self, review_output: str) -> str:
+        """Improve the final output for clarity and professionalism"""
+        print("\n" + "="*80)
+        print("PHASE 5: QUALITY ENHANCEMENT")
+        print("="*80)
+
+        quality_agent = self.agents_manager.agents["quality"]
+
+        quality_message = f"""Please refine and improve the following product recommendations:
+
+    {review_output}
+
+    Make the writing clearer, more concise, more structured, and more executive-friendly."""
+
+        quality_output = quality_agent.generate_reply(
+            messages=[{"content": quality_message, "role": "user"}]
+        )
+
+        print("\nQuality Agent Output:")
+        print(quality_output)
+
+        self.outputs["quality"] = quality_output
+        return quality_output
+
 
     def execute_workflow(self) -> Dict[str, str]:
         """Execute the complete four-phase workflow"""
@@ -314,6 +364,9 @@ class InterviewPlatformWorkflow:
 
         # Phase 4: Review
         review_output = self.conduct_review_phase(blueprint_output)
+
+        quality_output = self.conduct_quality_phase(review_output)
+
 
         return self.outputs
 
@@ -360,6 +413,12 @@ class OutputManager:
             f.write("-"*80 + "\n")
             f.write(outputs.get("review", "No review output") + "\n\n")
 
+            # Quality Phase
+            f.write("PHASE 5: QUALITY ENHANCEMENT\n")
+            f.write("-" * 80 + "\n")
+            f.write(outputs.get("quality", "No quality output") + "\n\n")
+
+
         return output_file
 
     def create_summary(self, outputs: Dict[str, str]) -> str:
@@ -376,7 +435,9 @@ class OutputManager:
             f.write("✓ Market Research & Competitive Analysis\n")
             f.write("✓ Market Gap & Opportunity Identification\n")
             f.write("✓ Product Blueprint Creation\n")
-            f.write("✓ Strategic Review & Recommendations\n\n")
+            f.write("✓ Strategic Review & Recommendations\n")
+            f.write("✓ Quality Enhancement & Final Polishing\n\n")
+
 
             f.write("KEY DELIVERABLES:\n")
             f.write("1. Competitive landscape analysis\n")
